@@ -387,12 +387,14 @@
     // Инициализация Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
+    tg.enableClosingConfirmation();
 
     // Получение параметров URL
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit') || urlParams.get('myedit');
     const targetUsername = urlParams.get('username');
     const isEditMode = editId !== null;
+    const isAdminEdit = urlParams.get('edit') !== null; // Режим редактирования админом
 
     // Элементы формы
     const form = document.getElementById('registrationForm');
@@ -401,6 +403,7 @@
     const editUsername = document.getElementById('editUsername');
     const dataLoadedBanner = document.getElementById('dataLoadedBanner');
     const submitBtn = document.getElementById('submitBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     // Поля формы
     const nickname = document.getElementById('nickname');
@@ -416,43 +419,74 @@
     // Ранги, требующие звёзды
     const mythicRanks = ['mythic', 'mythic_honor', 'mythic_glory', 'mythic_immortal'];
 
+    // Функция показа загрузки
+    function showLoading() {
+        loadingOverlay.classList.add('active');
+    }
+
+    // Функция скрытия загрузки
+    function hideLoading() {
+        loadingOverlay.classList.remove('active');
+    }
+
     // Функция заполнения формы данными
     function fillFormWithData(playerData) {
         console.log('Заполняем форму данными:', playerData);
         
         // Распаковываем данные (используем короткие имена из URL)
-        nickname.value = playerData.n || '';
-        winrateSeason.value = playerData.ws || '';
-        winrateTotal.value = playerData.wt || '';
+        nickname.value = playerData.n || playerData.nickname || '';
+        winrateSeason.value = playerData.ws || playerData.winrate_season || '';
+        winrateTotal.value = playerData.wt || playerData.winrate_total || '';
         
         // Текущий ранг
-        if (playerData.cr) {
-            currentRank.value = playerData.cr;
+        if (playerData.cr || playerData.current_rank) {
+            const currentRankValue = playerData.cr || playerData.current_rank;
+            currentRank.value = currentRankValue;
             currentRank.dispatchEvent(new Event('change'));
             
-            if (mythicRanks.includes(playerData.cr) && playerData.cs) {
-                currentStars.value = playerData.cs;
+            if (mythicRanks.includes(currentRankValue)) {
+                const stars = playerData.cs || playerData.current_stars;
+                if (stars !== null && stars !== undefined) {
+                    currentStars.value = stars;
+                }
             }
         }
         
         // Максимальный ранг
-        if (playerData.mr) {
-            maxRank.value = playerData.mr;
+        if (playerData.mr || playerData.max_rank) {
+            const maxRankValue = playerData.mr || playerData.max_rank;
+            maxRank.value = maxRankValue;
             maxRank.dispatchEvent(new Event('change'));
             
-            if (mythicRanks.includes(playerData.mr) && playerData.ms) {
-                maxStars.value = playerData.ms;
+            if (mythicRanks.includes(maxRankValue)) {
+                const stars = playerData.ms || playerData.max_stars;
+                if (stars !== null && stars !== undefined) {
+                    maxStars.value = stars;
+                }
             }
         }
         
         // Роли
-        if (playerData.l && Array.isArray(playerData.l)) {
-            playerData.l.forEach(lane => {
-                const checkbox = document.getElementById(`lane_${lane}`);
-                if (checkbox) {
-                    checkbox.checked = true;
+        let lanesData = playerData.l || playerData.lanes;
+        if (lanesData) {
+            // Если lanes в формате JSON строки, парсим её
+            if (typeof lanesData === 'string') {
+                try {
+                    lanesData = JSON.parse(lanesData);
+                } catch (e) {
+                    console.error('Ошибка парсинга lanes:', e);
+                    lanesData = [];
                 }
-            });
+            }
+            
+            if (Array.isArray(lanesData)) {
+                lanesData.forEach(lane => {
+                    const checkbox = document.getElementById(`lane_${lane}`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
         }
         
         // Показываем уведомление
@@ -460,6 +494,47 @@
         setTimeout(() => {
             dataLoadedBanner.classList.remove('active');
         }, 3000);
+    }
+
+    // Функция загрузки данных игрока с сервера
+    async function loadPlayerData(userId) {
+        showLoading();
+        
+        try {
+            // Здесь должен быть запрос к вашему серверу для получения данных игрока
+            // В реальном приложении замените этот код на реальный API вызов
+            console.log('Загружаем данные для пользователя:', userId);
+            
+            // Имитация загрузки данных
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // В реальном приложении здесь будет что-то вроде:
+            // const response = await fetch(`/api/player/${userId}`);
+            // const playerData = await response.json();
+            
+            // Пока используем данные из URL или заглушку
+            const encodedData = urlParams.get('data');
+            if (encodedData) {
+                try {
+                    const playerData = JSON.parse(decodeURIComponent(encodedData));
+                    fillFormWithData(playerData);
+                    return true;
+                } catch (error) {
+                    console.error('Ошибка декодирования данных из URL:', error);
+                }
+            }
+            
+            // Если данных в URL нет, можно попробовать получить их другим способом
+            // Например, через Telegram Cloud Storage или другие методы
+            return false;
+            
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+            tg.showAlert('Ошибка загрузки данных игрока');
+            return false;
+        } finally {
+            hideLoading();
+        }
     }
 
     // Функция показа формы
@@ -491,31 +566,34 @@
         }
     });
 
-    // Режим редактирования
-    if (isEditMode) {
-        editBanner.classList.add('active');
-        submitBtn.textContent = 'Изменить анкету';
-        editUsername.textContent = targetUsername || `ID: ${editId}`;
-        formTitle.textContent = 'Редактирование анкеты';
-        
-        // Пытаемся получить данные из URL
-        const encodedData = urlParams.get('data');
-        if (encodedData) {
-            try {
-                const playerData = JSON.parse(decodeURIComponent(encodedData));
-                fillFormWithData(playerData);
-            } catch (error) {
-                console.error('Ошибка декодирования данных:', error);
-                // Если не получилось - показываем пустую форму
+    // Инициализация формы
+    async function initializeForm() {
+        // Режим редактирования
+        if (isEditMode) {
+            editBanner.classList.add('active');
+            submitBtn.textContent = 'Изменить анкету';
+            editUsername.textContent = targetUsername || `ID: ${editId}`;
+            
+            if (isAdminEdit) {
+                formTitle.textContent = 'Редактирование анкеты (админ)';
+            } else {
+                formTitle.textContent = 'Редактирование анкеты';
+            }
+            
+            // Пытаемся загрузить данные игрока
+            const dataLoaded = await loadPlayerData(editId);
+            
+            if (!dataLoaded) {
+                // Если данные не загрузились, показываем пустую форму
+                showForm();
+                tg.showAlert('Не удалось загрузить данные игрока. Заполните форму заново.');
+            } else {
                 showForm();
             }
         } else {
-            // Если данных нет - пустая форма
+            // Режим создания
             showForm();
         }
-    } else {
-        // Режим создания
-        showForm();
     }
 
     // Валидация ника
@@ -651,12 +729,20 @@
 
         // Отправка данных
         try {
+            showLoading();
+            
             if (isEditMode) {
-                tg.sendData(JSON.stringify({
+                // В режиме редактирования отправляем ID целевого игрока
+                const payload = {
                     action: 'update',
-                    editId: editId,
+                    editId: editId,  // ID игрока, чью анкету редактируем
+                    targetUserId: editId, // Явно указываем целевого пользователя
+                    isAdminEdit: isAdminEdit, // Указываем тип редактирования
                     data: formData
-                }));
+                };
+                
+                console.log('Отправка данных редактирования:', payload);
+                tg.sendData(JSON.stringify(payload));
             } else {
                 tg.sendData(JSON.stringify({
                     action: 'create',
@@ -664,12 +750,21 @@
                 }));
             }
 
-            tg.close();
+            // Даем время на отправку данных перед закрытием
+            setTimeout(() => {
+                tg.close();
+            }, 1000);
 
         } catch (error) {
             console.error('Ошибка отправки:', error);
             tg.showAlert('Произошла ошибка при отправке данных');
+            hideLoading();
         }
+    });
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeForm();
     });
 </script>
 </body>

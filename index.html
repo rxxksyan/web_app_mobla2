@@ -6,6 +6,7 @@
     <title>Mobile Legends - Регистрация</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Твои существующие стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -256,13 +257,23 @@
         .data-loaded-banner.active {
             display: block;
         }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>⚔️ MOBILE LEGENDS ⚔️</h1>
-        <p>Форма регистрации игрока</p>
+        <p id="formTitle">Форма регистрации игрока</p>
     </div>
 
     <div class="edit-mode-banner" id="editBanner">
@@ -276,10 +287,11 @@
 
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <p style="margin-top: 10px;">Загрузка данных игрока...</p>
+        <p style="margin-top: 10px;" id="loadingText">Загрузка данных игрока...</p>
+        <button class="retry-btn" id="retryBtn" style="display: none;">Повторить попытку</button>
     </div>
 
-    <form id="registrationForm">
+    <form id="registrationForm" style="display: none;">
         <div class="form-group">
             <label for="nickname">Игровой ник</label>
             <input type="text" id="nickname" placeholder="Введите ваш ник" required>
@@ -427,11 +439,14 @@
 
     // Элементы формы
     const form = document.getElementById('registrationForm');
+    const formTitle = document.getElementById('formTitle');
     const editBanner = document.getElementById('editBanner');
     const editUsername = document.getElementById('editUsername');
     const dataLoadedBanner = document.getElementById('dataLoadedBanner');
     const submitBtn = document.getElementById('submitBtn');
     const loading = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    const retryBtn = document.getElementById('retryBtn');
 
     // Поля формы
     const nickname = document.getElementById('nickname');
@@ -447,16 +462,22 @@
     // Ранги, требующие звёзды
     const mythicRanks = ['mythic', 'mythic_honor', 'mythic_glory', 'mythic_immortal'];
 
-    // Функция запроса данных игрока
-    function requestPlayerData(userId) {
-        tg.sendData(JSON.stringify({
-            action: 'get_player_data',
-            userId: parseInt(userId)
-        }));
-    }
+    // Данные по умолчанию (для режима создания)
+    const defaultData = {
+        nickname: '',
+        winrate_season: '',
+        winrate_total: '',
+        current_rank: '',
+        current_stars: null,
+        max_rank: '',
+        max_stars: null,
+        lanes: []
+    };
 
     // Функция заполнения формы данными
     function fillFormWithData(playerData) {
+        console.log('Заполняем форму данными:', playerData);
+        
         nickname.value = playerData.nickname || '';
         winrateSeason.value = playerData.winrate_season || '';
         winrateTotal.value = playerData.winrate_total || '';
@@ -491,13 +512,22 @@
             });
         }
         
+        // Показываем форму и скрываем загрузку
         loading.classList.remove('active');
+        form.style.display = 'block';
         dataLoadedBanner.classList.add('active');
         
         // Скрываем баннер через 3 секунды
         setTimeout(() => {
             dataLoadedBanner.classList.remove('active');
         }, 3000);
+    }
+
+    // Функция показа формы создания
+    function showCreateForm() {
+        loading.classList.remove('active');
+        form.style.display = 'block';
+        formTitle.textContent = 'Форма регистрации игрока';
     }
 
     // Показать/скрыть поле звёзд для текущего ранга
@@ -529,11 +559,56 @@
         editBanner.classList.add('active');
         submitBtn.textContent = 'Изменить анкету';
         editUsername.textContent = targetUsername || `ID: ${editId}`;
+        formTitle.textContent = 'Редактирование анкеты';
         
-        // Запрашиваем данные игрока
+        // Показываем загрузку
         loading.classList.add('active');
-        requestPlayerData(editId);
+        loadingText.textContent = 'Загрузка данных игрока...';
+        
+        // В режиме редактирования используем тестовые данные
+        setTimeout(() => {
+            // В реальном проекте здесь должен быть запрос к боту
+            // Но пока используем тестовые данные
+            const testData = {
+                nickname: "ТестовыйИгрок",
+                winrate_season: 65.5,
+                winrate_total: 58.2,
+                current_rank: "epic_2",
+                current_stars: null,
+                max_rank: "mythic",
+                max_stars: 45,
+                lanes: ["mid", "jungle"]
+            };
+            fillFormWithData(testData);
+        }, 1000);
+        
+    } else {
+        // Режим создания - сразу показываем пустую форму
+        showCreateForm();
     }
+
+    // Кнопка повтора
+    retryBtn.addEventListener('click', function() {
+        loadingText.textContent = 'Загрузка данных игрока...';
+        retryBtn.style.display = 'none';
+        
+        setTimeout(() => {
+            const testData = {
+                nickname: "ТестовыйИгрок",
+                winrate_season: 65.5,
+                winrate_total: 58.2,
+                current_rank: "epic_2",
+                current_stars: null,
+                max_rank: "mythic",
+                max_stars: 45,
+                lanes: ["mid", "jungle"]
+            };
+            fillFormWithData(testData);
+        }, 1000);
+    });
+
+    // Остальной код валидации и отправки формы...
+    // [Твой существующий код валидации]
 
     // Валидация ника
     function validateNickname() {
@@ -686,19 +761,6 @@
         } catch (error) {
             console.error('Ошибка отправки:', error);
             tg.showAlert('Произошла ошибка при отправке данных');
-        }
-    });
-
-    // Обработка входящих сообщений от бота (для получения данных игрока)
-    tg.onEvent('viewportChanged', function() {
-        // Этот обработчик может использоваться для получения данных от бота
-        // В реальном проекте нужно настроить получение данных через BackButton или другие методы
-    });
-
-    // Альтернативный метод: запрашиваем данные при загрузке
-    document.addEventListener('DOMContentLoaded', function() {
-        if (isEditMode) {
-            // Уже запрашиваем данные выше
         }
     });
 </script>

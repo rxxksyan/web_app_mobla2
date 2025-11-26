@@ -69,6 +69,19 @@
             opacity: 0.9;
         }
 
+        .data-loaded-banner {
+            background: linear-gradient(135deg, #4cd964, #5ac8fa);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .data-loaded-banner.active {
+            display: block;
+        }
+
         .form-group {
             margin-bottom: 25px;
         }
@@ -232,6 +245,10 @@
         <p>Редактирование анкеты игрока: <strong id="editUsername"></strong></p>
     </div>
 
+    <div class="data-loaded-banner" id="dataLoadedBanner">
+        <p>✅ Данные игрока загружены</p>
+    </div>
+
     <form id="registrationForm">
         <div class="form-group">
             <label for="nickname">Игровой ник</label>
@@ -382,6 +399,7 @@
     const formTitle = document.getElementById('formTitle');
     const editBanner = document.getElementById('editBanner');
     const editUsername = document.getElementById('editUsername');
+    const dataLoadedBanner = document.getElementById('dataLoadedBanner');
     const submitBtn = document.getElementById('submitBtn');
 
     // Поля формы
@@ -398,15 +416,55 @@
     // Ранги, требующие звёзды
     const mythicRanks = ['mythic', 'mythic_honor', 'mythic_glory', 'mythic_immortal'];
 
-    // Режим редактирования
-    if (isEditMode) {
-        editBanner.classList.add('active');
-        submitBtn.textContent = 'Изменить анкету';
-        editUsername.textContent = targetUsername || `ID: ${editId}`;
-        formTitle.textContent = 'Редактирование анкеты';
+    // Функция заполнения формы данными
+    function fillFormWithData(playerData) {
+        console.log('Заполняем форму данными:', playerData);
         
-        // В режиме редактирования НИЧЕГО не загружаем!
-        // Пользователь заполняет форму заново
+        // Распаковываем данные (используем короткие имена из URL)
+        nickname.value = playerData.n || '';
+        winrateSeason.value = playerData.ws || '';
+        winrateTotal.value = playerData.wt || '';
+        
+        // Текущий ранг
+        if (playerData.cr) {
+            currentRank.value = playerData.cr;
+            currentRank.dispatchEvent(new Event('change'));
+            
+            if (mythicRanks.includes(playerData.cr) && playerData.cs) {
+                currentStars.value = playerData.cs;
+            }
+        }
+        
+        // Максимальный ранг
+        if (playerData.mr) {
+            maxRank.value = playerData.mr;
+            maxRank.dispatchEvent(new Event('change'));
+            
+            if (mythicRanks.includes(playerData.mr) && playerData.ms) {
+                maxStars.value = playerData.ms;
+            }
+        }
+        
+        // Роли
+        if (playerData.l && Array.isArray(playerData.l)) {
+            playerData.l.forEach(lane => {
+                const checkbox = document.getElementById(`lane_${lane}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+        
+        // Показываем уведомление
+        dataLoadedBanner.classList.add('active');
+        setTimeout(() => {
+            dataLoadedBanner.classList.remove('active');
+        }, 3000);
+    }
+
+    // Функция показа формы
+    function showForm() {
+        form.style.display = 'block';
     }
 
     // Показать/скрыть поле звёзд для текущего ранга
@@ -432,6 +490,33 @@
             maxStars.value = '';
         }
     });
+
+    // Режим редактирования
+    if (isEditMode) {
+        editBanner.classList.add('active');
+        submitBtn.textContent = 'Изменить анкету';
+        editUsername.textContent = targetUsername || `ID: ${editId}`;
+        formTitle.textContent = 'Редактирование анкеты';
+        
+        // Пытаемся получить данные из URL
+        const encodedData = urlParams.get('data');
+        if (encodedData) {
+            try {
+                const playerData = JSON.parse(decodeURIComponent(encodedData));
+                fillFormWithData(playerData);
+            } catch (error) {
+                console.error('Ошибка декодирования данных:', error);
+                // Если не получилось - показываем пустую форму
+                showForm();
+            }
+        } else {
+            // Если данных нет - пустая форма
+            showForm();
+        }
+    } else {
+        // Режим создания
+        showForm();
+    }
 
     // Валидация ника
     function validateNickname() {

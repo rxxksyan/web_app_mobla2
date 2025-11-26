@@ -556,36 +556,25 @@
 
     // Режим редактирования
     if (isEditMode) {
-        editBanner.classList.add('active');
-        submitBtn.textContent = 'Изменить анкету';
-        editUsername.textContent = targetUsername || `ID: ${editId}`;
-        formTitle.textContent = 'Редактирование анкеты';
-        
-        // Показываем загрузку
-        loading.classList.add('active');
-        loadingText.textContent = 'Загрузка данных игрока...';
-        
-        // В режиме редактирования используем тестовые данные
-        setTimeout(() => {
-            // В реальном проекте здесь должен быть запрос к боту
-            // Но пока используем тестовые данные
-            const testData = {
-                nickname: "ТестовыйИгрок",
-                winrate_season: 65.5,
-                winrate_total: 58.2,
-                current_rank: "epic_2",
-                current_stars: null,
-                max_rank: "mythic",
-                max_stars: 45,
-                lanes: ["mid", "jungle"]
-            };
-            fillFormWithData(testData);
-        }, 1000);
-        
-    } else {
-        // Режим создания - сразу показываем пустую форму
-        showCreateForm();
-    }
+    editBanner.classList.add('active');
+    submitBtn.textContent = 'Изменить анкету';
+    editUsername.textContent = targetUsername || `ID: ${editId}`;
+    formTitle.textContent = 'Редактирование анкеты';
+    
+    // В режиме редактирования НЕ запрашиваем данные у бота
+    // Просто показываем пустую форму - пользователь заполнит ее сам
+    loading.classList.remove('active');
+    form.style.display = 'block';
+    
+    // Можно показать сообщение, что нужно заполнить форму заново
+    dataLoadedBanner.innerHTML = '<p>⚠️ Заполните форму новыми данными</p>';
+    dataLoadedBanner.style.background = 'linear-gradient(135deg, #ffa726, #ff9800)';
+    dataLoadedBanner.classList.add('active');
+    
+} else {
+    // Режим создания - сразу показываем пустую форму
+    showCreateForm();
+}
 
     // Кнопка повтора
     retryBtn.addEventListener('click', function() {

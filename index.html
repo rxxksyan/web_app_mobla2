@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Legends - Регистрация</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(45deg, #00d9ff, #00a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+        }
+
+        .edit-mode-banner {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .edit-mode-banner.active {
+            display: block;
+        }
+
+        .edit-mode-banner h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .edit-mode-banner p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #00d9ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #00d9ff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        select option {
+            background: #16213e;
+            color: #fff;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            position: relative;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-item label {
+            display: block;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked + label {
+            color: white;
+            background: linear-gradient(135deg, #00d9ff, #00a8ff);
+            border-color: #00d9ff;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .input-error {
+            border-color: #ff6b6b !important;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00d9ff, #00a8ff);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 217, 255, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 217, 255, 0.6);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .rank-info {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .checkbox-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 217, 255, 0.3);
+            border-top: 3px solid #00d9ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .data-loaded-banner {
+            background: linear-gradient(135deg, #4cd964, #5ac8fa);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .data-loaded-banner.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚔️ MOBILE LEGENDS ⚔️</h1>
+        <p>Форма регистрации игрока</p>
+    </div>
+
+    <div class="edit-mode-banner" id="editBanner">
+        <h3>🔧 Режим редактирования</h3>
+        <p>Редактирование формы игрока: <strong id="editUsername"></strong></p>
+    </div>
+
+    <div class="data-loaded-banner" id="dataLoadedBanner">
+        <p>✅ Данные игрока загружены</p>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px;">Загрузка данных игрока...</p>
+    </div>
+
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="nickname">Игровой ник</label>
+            <input type="text" id="nickname" placeholder="Введите ваш ник" required>
+            <div class="error-message" id="nicknameError">Ник должен содержать от 3 до 20 символов</div>
+        </div>
+
+        <div class="form-group">
+            <label for="winrateSeason">Винрейт этого сезона (%)</label>
+            <input type="number" id="winrateSeason" placeholder="50" min="0" max="100" step="0.1" required>
+            <div class="error-message" id="winrateSeasonError">Винрейт должен быть от 0 до 100</div>
+        </div>
+
+        <div class="form-group">
+            <label for="winrateTotal">Винрейт за все сезоны (%)</label>
+            <input type="number" id="winrateTotal" placeholder="50" min="0" max="100" step="0.1" required>
+            <div class="error-message" id="winrateTotalError">Винрейт должен быть от 0 до 100</div>
+        </div>
+
+        <div class="form-group">
+            <label for="currentRank">Текущий ранг</label>
+            <select id="currentRank" required>
+                <option value="">Выберите ранг</option>
+                <option value="warrior_3">Воин III</option>
+                <option value="warrior_2">Воин II</option>
+                <option value="warrior_1">Воин I</option>
+                <option value="elite_3">Элита III</option>
+                <option value="elite_2">Элита II</option>
+                <option value="elite_1">Элита I</option>
+                <option value="master_4">Мастер IV</option>
+                <option value="master_3">Мастер III</option>
+                <option value="master_2">Мастер II</option>
+                <option value="master_1">Мастер I</option>
+                <option value="grandmaster_4">Грандмастер IV</option>
+                <option value="grandmaster_3">Грандмастер III</option>
+                <option value="grandmaster_2">Грандмастер II</option>
+                <option value="grandmaster_1">Грандмастер I</option>
+                <option value="epic_4">Эпик IV</option>
+                <option value="epic_3">Эпик III</option>
+                <option value="epic_2">Эпик II</option>
+                <option value="epic_1">Эпик I</option>
+                <option value="legend_5">Легенда V</option>
+                <option value="legend_4">Легенда IV</option>
+                <option value="legend_3">Легенда III</option>
+                <option value="legend_2">Легенда II</option>
+                <option value="legend_1">Легенда I</option>
+                <option value="mythic">Мифик</option>
+                <option value="mythic_honor">Мифическая честь</option>
+                <option value="mythic_glory">Мифическая слава</option>
+                <option value="mythic_immortal">Мифический бессмертный</option>
+            </select>
+            <div class="error-message" id="currentRankError">Выберите текущий ранг</div>
+        </div>
+
+        <div class="form-group" id="currentStarsGroup" style="display: none;">
+            <label for="currentStars">Количество звёзд (для Мифик+)</label>
+            <input type="number" id="currentStars" placeholder="0" min="0" max="9999">
+            <div class="rank-info">Для Мифик и выше укажите количество звёзд</div>
+            <div class="error-message" id="currentStarsError">Укажите количество звёзд</div>
+        </div>
+
+        <div class="form-group">
+            <label for="maxRank">Максимальный достигнутый ранг</label>
+            <select id="maxRank" required>
+                <option value="">Выберите ранг</option>
+                <option value="warrior_3">Воин III</option>
+                <option value="warrior_2">Воин II</option>
+                <option value="warrior_1">Воин I</option>
+                <option value="elite_3">Элита III</option>
+                <option value="elite_2">Элита II</option>
+                <option value="elite_1">Элита I</option>
+                <option value="master_4">Мастер IV</option>
+                <option value="master_3">Мастер III</option>
+                <option value="master_2">Мастер II</option>
+                <option value="master_1">Мастер I</option>
+                <option value="grandmaster_4">Грандмастер IV</option>
+                <option value="grandmaster_3">Грандмастер III</option>
+                <option value="grandmaster_2">Грандмастер II</option>
+                <option value="grandmaster_1">Грандмастер I</option>
+                <option value="epic_4">Эпик IV</option>
+                <option value="epic_3">Эпик III</option>
+                <option value="epic_2">Эпик II</option>
+                <option value="epic_1">Эпик I</option>
+                <option value="legend_5">Легенда V</option>
+                <option value="legend_4">Легенда IV</option>
+                <option value="legend_3">Легенда III</option>
+                <option value="legend_2">Легенда II</option>
+                <option value="legend_1">Легенда I</option>
+                <option value="mythic">Мифик</option>
+                <option value="mythic_honor">Мифическая честь</option>
+                <option value="mythic_glory">Мифическая слава</option>
+                <option value="mythic_immortal">Мифический бессмертный</option>
+            </select>
+            <div class="error-message" id="maxRankError">Выберите максимальный ранг</div>
+        </div>
+
+        <div class="form-group" id="maxStarsGroup" style="display: none;">
+            <label for="maxStars">Количество звёзд (для Мифик+)</label>
+            <input type="number" id="maxStars" placeholder="0" min="0" max="9999">
+            <div class="rank-info">Для Мифик и выше укажите количество звёзд</div>
+            <div class="error-message" id="maxStarsError">Укажите количество звёзд</div>
+        </div>
+
+        <div class="form-group">
+            <label>Роли/лайны</label>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lane_mid" value="mid">
+                    <label for="lane_mid">МИД</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lane_jungle" value="jungle">
+                    <label for="lane_jungle">ЛЕС</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lane_roam" value="roam">
+                    <label for="lane_roam">РОУМ</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lane_gold" value="gold">
+                    <label for="lane_gold">ГОЛД</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lane_exp" value="exp">
+                    <label for="lane_exp">ЭКСПА</label>
+                </div>
+            </div>
+            <div class="error-message" id="lanesError">Выберите хотя бы одну роль</div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Отправить</button>
+    </form>
+</div>
+
+<script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.enableClosingConfirmation();
+
+    // Получение параметров URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit') || urlParams.get('myedit');
+    const targetUsername = urlParams.get('username');
+    const isEditMode = editId !== null;
+
+    // Элементы формы
+    const form = document.getElementById('registrationForm');
+    const editBanner = document.getElementById('editBanner');
+    const editUsername = document.getElementById('editUsername');
+    const dataLoadedBanner = document.getElementById('dataLoadedBanner');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+
+    // Поля формы
+    const nickname = document.getElementById('nickname');
+    const winrateSeason = document.getElementById('winrateSeason');
+    const winrateTotal = document.getElementById('winrateTotal');
+    const currentRank = document.getElementById('currentRank');
+    const currentStars = document.getElementById('currentStars');
+    const currentStarsGroup = document.getElementById('currentStarsGroup');
+    const maxRank = document.getElementById('maxRank');
+    const maxStars = document.getElementById('maxStars');
+    const maxStarsGroup = document.getElementById('maxStarsGroup');
+
+    // Ранги, требующие звёзды
+    const mythicRanks = ['mythic', 'mythic_honor', 'mythic_glory', 'mythic_immortal'];
+
+    // Функция запроса данных игрока
+    function requestPlayerData(userId) {
+        tg.sendData(JSON.stringify({
+            action: 'get_player_data',
+            userId: parseInt(userId)
+        }));
+    }
+
+    // Функция заполнения формы данными
+    function fillFormWithData(playerData) {
+        nickname.value = playerData.nickname || '';
+        winrateSeason.value = playerData.winrate_season || '';
+        winrateTotal.value = playerData.winrate_total || '';
+        
+        // Текущий ранг
+        if (playerData.current_rank) {
+            currentRank.value = playerData.current_rank;
+            currentRank.dispatchEvent(new Event('change'));
+            
+            if (mythicRanks.includes(playerData.current_rank) && playerData.current_stars) {
+                currentStars.value = playerData.current_stars;
+            }
+        }
+        
+        // Максимальный ранг
+        if (playerData.max_rank) {
+            maxRank.value = playerData.max_rank;
+            maxRank.dispatchEvent(new Event('change'));
+            
+            if (mythicRanks.includes(playerData.max_rank) && playerData.max_stars) {
+                maxStars.value = playerData.max_stars;
+            }
+        }
+        
+        // Роли
+        if (playerData.lanes && Array.isArray(playerData.lanes)) {
+            playerData.lanes.forEach(lane => {
+                const checkbox = document.getElementById(`lane_${lane}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+        
+        loading.classList.remove('active');
+        dataLoadedBanner.classList.add('active');
+        
+        // Скрываем баннер через 3 секунды
+        setTimeout(() => {
+            dataLoadedBanner.classList.remove('active');
+        }, 3000);
+    }
+
+    // Показать/скрыть поле звёзд для текущего ранга
+    currentRank.addEventListener('change', function() {
+        if (mythicRanks.includes(this.value)) {
+            currentStarsGroup.style.display = 'block';
+            currentStars.required = true;
+        } else {
+            currentStarsGroup.style.display = 'none';
+            currentStars.required = false;
+            currentStars.value = '';
+        }
+    });
+
+    // Показать/скрыть поле звёзд для максимального ранга
+    maxRank.addEventListener('change', function() {
+        if (mythicRanks.includes(this.value)) {
+            maxStarsGroup.style.display = 'block';
+            maxStars.required = true;
+        } else {
+            maxStarsGroup.style.display = 'none';
+            maxStars.required = false;
+            maxStars.value = '';
+        }
+    });
+
+    // Режим редактирования
+    if (isEditMode) {
+        editBanner.classList.add('active');
+        submitBtn.textContent = 'Изменить анкету';
+        editUsername.textContent = targetUsername || `ID: ${editId}`;
+        
+        // Запрашиваем данные игрока
+        loading.classList.add('active');
+        requestPlayerData(editId);
+    }
+
+    // Валидация ника
+    function validateNickname() {
+        const value = nickname.value.trim();
+        const error = document.getElementById('nicknameError');
+
+        if (value.length < 3 || value.length > 20) {
+            nickname.classList.add('input-error');
+            error.classList.add('active');
+            return false;
+        }
+
+        nickname.classList.remove('input-error');
+        error.classList.remove('active');
+        return true;
+    }
+
+    // Валидация винрейта
+    function validateWinrate(input, errorId) {
+        const value = parseFloat(input.value);
+        const error = document.getElementById(errorId);
+
+        if (isNaN(value) || value < 0 || value > 100) {
+            input.classList.add('input-error');
+            error.classList.add('active');
+            return false;
+        }
+
+        input.classList.remove('input-error');
+        error.classList.remove('active');
+        return true;
+    }
+
+    // Валидация селекта
+    function validateSelect(select, errorId) {
+        const error = document.getElementById(errorId);
+
+        if (!select.value) {
+            select.classList.add('input-error');
+            error.classList.add('active');
+            return false;
+        }
+
+        select.classList.remove('input-error');
+        error.classList.remove('active');
+        return true;
+    }
+
+    // Валидация звёзд
+    function validateStars(input, errorId) {
+        if (!input.required) return true;
+
+        const value = parseInt(input.value);
+        const error = document.getElementById(errorId);
+
+        if (isNaN(value) || value < 0) {
+            input.classList.add('input-error');
+            error.classList.add('active');
+            return false;
+        }
+
+        input.classList.remove('input-error');
+        error.classList.remove('active');
+        return true;
+    }
+
+    // Валидация ролей
+    function validateLanes() {
+        const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+        const error = document.getElementById('lanesError');
+        const isChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+        if (!isChecked) {
+            error.classList.add('active');
+            return false;
+        }
+
+        error.classList.remove('active');
+        return true;
+    }
+
+    // События валидации
+    nickname.addEventListener('blur', validateNickname);
+    winrateSeason.addEventListener('blur', () => validateWinrate(winrateSeason, 'winrateSeasonError'));
+    winrateTotal.addEventListener('blur', () => validateWinrate(winrateTotal, 'winrateTotalError'));
+    currentRank.addEventListener('change', () => validateSelect(currentRank, 'currentRankError'));
+    maxRank.addEventListener('change', () => validateSelect(maxRank, 'maxRankError'));
+    currentStars.addEventListener('blur', () => validateStars(currentStars, 'currentStarsError'));
+    maxStars.addEventListener('blur', () => validateStars(maxStars, 'maxStarsError'));
+
+    // Валидация ролей при изменении
+    document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', validateLanes);
+    });
+
+    // Обработка отправки формы
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Валидация всех полей
+        const isNicknameValid = validateNickname();
+        const isWinrateSeasonValid = validateWinrate(winrateSeason, 'winrateSeasonError');
+        const isWinrateTotalValid = validateWinrate(winrateTotal, 'winrateTotalError');
+        const isCurrentRankValid = validateSelect(currentRank, 'currentRankError');
+        const isMaxRankValid = validateSelect(maxRank, 'maxRankError');
+        const isCurrentStarsValid = validateStars(currentStars, 'currentStarsError');
+        const isMaxStarsValid = validateStars(maxStars, 'maxStarsError');
+        const isLanesValid = validateLanes();
+
+        if (!isNicknameValid || !isWinrateSeasonValid || !isWinrateTotalValid ||
+            !isCurrentRankValid || !isMaxRankValid || !isCurrentStarsValid ||
+            !isMaxStarsValid || !isLanesValid) {
+            tg.showAlert('Пожалуйста, исправьте ошибки в форме');
+            return;
+        }
+
+        // Сбор данных
+        const selectedLanes = Array.from(
+            document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked')
+        ).map(cb => cb.value);
+
+        const formData = {
+            nickname: nickname.value.trim(),
+            winrateSeason: parseFloat(winrateSeason.value),
+            winrateTotal: parseFloat(winrateTotal.value),
+            currentRank: currentRank.value,
+            currentStars: currentStars.required ? parseInt(currentStars.value) : null,
+            maxRank: maxRank.value,
+            maxStars: maxStars.required ? parseInt(maxStars.value) : null,
+            lanes: selectedLanes
+        };
+
+        // Отправка данных
+        try {
+            if (isEditMode) {
+                tg.sendData(JSON.stringify({
+                    action: 'update',
+                    editId: editId,
+                    data: formData
+                }));
+            } else {
+                tg.sendData(JSON.stringify({
+                    action: 'create',
+                    data: formData
+                }));
+            }
+
+            tg.close();
+
+        } catch (error) {
+            console.error('Ошибка отправки:', error);
+            tg.showAlert('Произошла ошибка при отправке данных');
+        }
+    });
+
+    // Обработка входящих сообщений от бота (для получения данных игрока)
+    tg.onEvent('viewportChanged', function() {
+        // Этот обработчик может использоваться для получения данных от бота
+        // В реальном проекте нужно настроить получение данных через BackButton или другие методы
+    });
+
+    // Альтернативный метод: запрашиваем данные при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        if (isEditMode) {
+            // Уже запрашиваем данные выше
+        }
+    });
+</script>
+</body>
+</html>

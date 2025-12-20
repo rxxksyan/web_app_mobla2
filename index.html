@@ -129,15 +129,12 @@
         .header h1 {
             font-size: 32px;
             font-weight: 900;
-            background: linear-gradient(135deg, #3a7bd5 0%, #3a7bd5 50%, #3a7bd5 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #ffffff;
             margin-bottom: 8px;
             letter-spacing: 2px;
             text-transform: uppercase;
             font-family: 'Tahoma', 'Arial Black', sans-serif;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 2px 10px rgba(58, 123, 213, 0.5);
             position: relative;
             display: inline-block;
             padding-bottom: 10px;
@@ -159,6 +156,7 @@
             color: rgba(255, 255, 255, 0.8);
             font-weight: 300;
             letter-spacing: 0.5px;
+            margin-top: 10px;
         }
 
         /* Основная стеклянная карточка */
@@ -177,7 +175,6 @@
             margin-bottom: 30px;
             position: relative;
             overflow: hidden;
-            transition: margin-top 0.5s ease;
         }
 
         .glass-card::before {
@@ -198,11 +195,11 @@
         .glass-card::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 24px;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            border-radius: 23px;
             background: linear-gradient(135deg, 
                 rgba(255, 255, 255, 0.05) 0%,
                 transparent 20%,
@@ -212,22 +209,7 @@
             z-index: 0;
         }
 
-        /* Контейнер для баннеров - теперь он будет плавно меняться в высоте */
-        .banners-wrapper {
-            overflow: hidden;
-            transition: max-height 0.5s ease, margin-bottom 0.5s ease, opacity 0.5s ease;
-            max-height: 0;
-            margin-bottom: 0;
-            opacity: 0;
-        }
-
-        .banners-wrapper.active {
-            max-height: 500px; /* Достаточно для двух баннеров */
-            margin-bottom: 25px;
-            opacity: 1;
-        }
-
-        /* Баннеры с улучшенным стеклянным эффектом - ИСХОДНЫЙ СТИЛЬ */
+        /* Баннеры с улучшенным стеклянным эффектом */
         .edit-mode-banner {
             background: linear-gradient(135deg, 
                 rgba(255, 90, 90, 0.2) 0%, 
@@ -236,21 +218,13 @@
             -webkit-backdrop-filter: blur(25px) saturate(200%);
             border-radius: 16px;
             padding: 18px;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
             border: 1px solid rgba(255, 90, 90, 0.25);
             position: relative;
             overflow: hidden;
             box-shadow: 
                 0 10px 30px rgba(255, 90, 90, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
-        }
-
-        .edit-mode-banner.active {
-            opacity: 1;
-            transform: translateY(0);
         }
 
         .edit-mode-banner::before {
@@ -266,11 +240,24 @@
                 #ff5a5a);
         }
 
+        .edit-mode-banner.active {
+            display: block;
+            animation: glassFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .edit-mode-banner h3 {
             font-size: 16px;
             font-weight: 600;
             color: #ff9e9e;
             margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edit-mode-banner h3::before {
+            content: '🛠️';
+            font-size: 16px;
         }
 
         .edit-mode-banner p {
@@ -291,23 +278,32 @@
             margin-bottom: 20px;
             border: 1px solid rgba(100, 255, 150, 0.25);
             text-align: center;
+            display: none;
+            animation: glassSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 
                 0 10px 30px rgba(100, 255, 150, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
         }
 
         .data-loaded-banner.active {
-            opacity: 1;
-            transform: translateY(0);
+            display: block;
         }
 
         .data-loaded-banner p {
             color: #a4ffc8;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             font-size: 15px;
+        }
+
+        .data-loaded-banner p::before {
+            content: '✓';
+            font-weight: bold;
+            font-size: 18px;
+            color: #64ff96;
         }
 
         /* Overlay загрузки */
@@ -324,14 +320,12 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s;
+            display: none;
         }
 
         .loading-overlay.active {
-            opacity: 1;
-            visibility: visible;
+            display: flex;
+            animation: glassFadeIn 0.4s ease;
         }
 
         .spinner {
@@ -348,11 +342,32 @@
             100% { transform: rotate(360deg); }
         }
 
+        @keyframes glassFadeIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes glassSlideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Группы формы */
         .form-group {
             margin-bottom: 28px;
             position: relative;
-            transition: margin-bottom 0.3s ease;
         }
 
         label {
@@ -575,18 +590,11 @@
             display: none;
             font-weight: 400;
             padding-left: 10px;
-            opacity: 0;
-            transform: translateY(-5px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            max-height: 0;
-            overflow: hidden;
         }
 
         .error-message.active {
             display: block;
-            opacity: 1;
-            transform: translateY(0);
-            max-height: 100px;
+            animation: glassFadeIn 0.3s ease;
         }
 
         .input-error {
@@ -603,7 +611,6 @@
             margin-top: 6px;
             font-weight: 300;
             padding-left: 10px;
-            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         /* Кнопка с эффектом стекла */
@@ -760,16 +767,13 @@
     </div>
 
     <div class="glass-card">
-        <!-- Контейнер для баннеров с анимацией высоты -->
-        <div class="banners-wrapper" id="bannersWrapper">
-            <div class="edit-mode-banner" id="editBanner">
-                <h3>Режим редактирования</h3>
-                <p>Редактирование анкеты игрока: <strong id="editUsername"></strong></p>
-            </div>
+        <div class="edit-mode-banner" id="editBanner">
+            <h3>Режим редактирования</h3>
+            <p>Редактирование анкеты игрока: <strong id="editUsername"></strong></p>
+        </div>
 
-            <div class="data-loaded-banner" id="dataLoadedBanner">
-                <p>Данные игрока загружены</p>
-            </div>
+        <div class="data-loaded-banner" id="dataLoadedBanner">
+            <p>Данные игрока загружены</p>
         </div>
 
         <form id="registrationForm">
@@ -923,7 +927,6 @@
     // Элементы формы
     const form = document.getElementById('registrationForm');
     const formTitle = document.getElementById('formTitle');
-    const bannersWrapper = document.getElementById('bannersWrapper');
     const editBanner = document.getElementById('editBanner');
     const editUsername = document.getElementById('editUsername');
     const dataLoadedBanner = document.getElementById('dataLoadedBanner');
@@ -952,16 +955,6 @@
     // Функция скрытия загрузки
     function hideLoading() {
         loadingOverlay.classList.remove('active');
-    }
-
-    // Функция показа баннеров
-    function showBanners() {
-        bannersWrapper.classList.add('active');
-    }
-
-    // Функция скрытия баннеров
-    function hideBanners() {
-        bannersWrapper.classList.remove('active');
     }
 
     // Функция заполнения формы данными
@@ -1003,17 +996,10 @@
             });
         }
         
-        // Показываем баннер загрузки данных
-        showBanners();
+        // Показываем уведомление
         dataLoadedBanner.classList.add('active');
         setTimeout(() => {
             dataLoadedBanner.classList.remove('active');
-            // Если нет edit баннера, скрываем контейнер полностью
-            if (!editBanner.classList.contains('active')) {
-                setTimeout(() => {
-                    hideBanners();
-                }, 300);
-            }
         }, 3000);
     }
 
@@ -1084,6 +1070,7 @@
         // Режим редактирования
         if (isEditMode) {
             editBanner.classList.add('active');
+            submitBtn.textContent = 'Изменить анкету';
             editUsername.textContent = targetUsername || `ID: ${editId}`;
             
             if (isAdminEdit) {
@@ -1091,9 +1078,6 @@
             } else {
                 formTitle.textContent = 'Редактирование анкеты';
             }
-            
-            // Показываем баннеры
-            showBanners();
             
             // Пытаемся загрузить данные игрока
             const dataLoaded = await loadPlayerData(editId);

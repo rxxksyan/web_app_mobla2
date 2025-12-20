@@ -161,25 +161,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Контейнер для баннеров и формы */
-        .banners-container {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.5s ease;
-            margin-bottom: 0;
-            overflow: hidden;
-        }
-
-        .banners-container.active {
-            grid-template-rows: 1fr;
-            margin-bottom: 25px;
-        }
-
-        .banners-inner {
-            min-height: 0;
-            overflow: hidden;
-        }
-
         /* Основная стеклянная карточка */
         .glass-card {
             background: rgba(16, 25, 40, 0.25);
@@ -193,6 +174,7 @@
                 inset 0 -1px 0 rgba(0, 0, 0, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.05);
             padding: 35px;
+            margin-bottom: 30px;
             position: relative;
             overflow: hidden;
             transition: margin-top 0.5s ease;
@@ -230,7 +212,22 @@
             z-index: 0;
         }
 
-        /* Баннеры с улучшенным стеклянным эффектом */
+        /* Контейнер для баннеров - теперь он будет плавно меняться в высоте */
+        .banners-wrapper {
+            overflow: hidden;
+            transition: max-height 0.5s ease, margin-bottom 0.5s ease, opacity 0.5s ease;
+            max-height: 0;
+            margin-bottom: 0;
+            opacity: 0;
+        }
+
+        .banners-wrapper.active {
+            max-height: 500px; /* Достаточно для двух баннеров */
+            margin-bottom: 25px;
+            opacity: 1;
+        }
+
+        /* Баннеры с улучшенным стеклянным эффектом - ИСХОДНЫЙ СТИЛЬ */
         .edit-mode-banner {
             background: linear-gradient(135deg, 
                 rgba(255, 90, 90, 0.2) 0%, 
@@ -239,16 +236,16 @@
             -webkit-backdrop-filter: blur(25px) saturate(200%);
             border-radius: 16px;
             padding: 18px;
+            margin-bottom: 15px;
             border: 1px solid rgba(255, 90, 90, 0.25);
             position: relative;
             overflow: hidden;
             box-shadow: 
                 0 10px 30px rgba(255, 90, 90, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            margin-bottom: 15px;
             opacity: 0;
             transform: translateY(-20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
         }
 
         .edit-mode-banner.active {
@@ -291,6 +288,7 @@
             -webkit-backdrop-filter: blur(25px) saturate(200%);
             border-radius: 16px;
             padding: 16px;
+            margin-bottom: 20px;
             border: 1px solid rgba(100, 255, 150, 0.25);
             text-align: center;
             box-shadow: 
@@ -298,7 +296,7 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             opacity: 0;
             transform: translateY(-20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
         }
 
         .data-loaded-banner.active {
@@ -761,9 +759,9 @@
         <p id="formTitle">Форма регистрации игрока</p>
     </div>
 
-    <!-- Контейнер для баннеров с анимацией -->
-    <div class="banners-container" id="bannersContainer">
-        <div class="banners-inner">
+    <div class="glass-card">
+        <!-- Контейнер для баннеров с анимацией высоты -->
+        <div class="banners-wrapper" id="bannersWrapper">
             <div class="edit-mode-banner" id="editBanner">
                 <h3>Режим редактирования</h3>
                 <p>Редактирование анкеты игрока: <strong id="editUsername"></strong></p>
@@ -773,9 +771,7 @@
                 <p>Данные игрока загружены</p>
             </div>
         </div>
-    </div>
 
-    <div class="glass-card">
         <form id="registrationForm">
             <div class="form-group">
                 <label for="nickname">Игровой ник</label>
@@ -927,7 +923,7 @@
     // Элементы формы
     const form = document.getElementById('registrationForm');
     const formTitle = document.getElementById('formTitle');
-    const bannersContainer = document.getElementById('bannersContainer');
+    const bannersWrapper = document.getElementById('bannersWrapper');
     const editBanner = document.getElementById('editBanner');
     const editUsername = document.getElementById('editUsername');
     const dataLoadedBanner = document.getElementById('dataLoadedBanner');
@@ -960,12 +956,12 @@
 
     // Функция показа баннеров
     function showBanners() {
-        bannersContainer.classList.add('active');
+        bannersWrapper.classList.add('active');
     }
 
     // Функция скрытия баннеров
     function hideBanners() {
-        bannersContainer.classList.remove('active');
+        bannersWrapper.classList.remove('active');
     }
 
     // Функция заполнения формы данными
@@ -1096,11 +1092,8 @@
                 formTitle.textContent = 'Редактирование анкеты';
             }
             
-            // Показываем баннеры (сначала контейнер, затем баннер)
+            // Показываем баннеры
             showBanners();
-            setTimeout(() => {
-                editBanner.classList.add('active');
-            }, 50);
             
             // Пытаемся загрузить данные игрока
             const dataLoaded = await loadPlayerData(editId);
